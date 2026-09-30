@@ -203,6 +203,8 @@ Paste output của `generate_improvement_log()`:
 2. Thêm hướng dẫn cho câu hỏi ngoài phạm vi vào prompt (nêu vai trò, gợi ý chủ đề, bác bỏ tiền đề sai) và luôn đưa chunk phạm vi OT-00 vào context khi không có chunk nào liên quan.
 3. Thêm yêu cầu vào prompt: tính ngày cụ thể theo đúng phiên bản chính sách và chỉ áp dụng quyền lợi khi thỏa điều kiện (ví dụ loaner chỉ cho covered repair).
 
+Mã F001–F009 trong bảng trên tương ứng theo thứ tự với các QA fail: F001=E02, F002=M03, F003=M05, F004=H01, F005=H03, F006=H04, F007=A01, F008=A02, F009=A03.
+
 Với mỗi suggestion, nêu metric dự kiến thay đổi và cách đo lại.
 
 | Suggestion | Target metric | Verification method |

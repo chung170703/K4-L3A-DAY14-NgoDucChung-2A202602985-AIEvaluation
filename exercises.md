@@ -269,19 +269,27 @@ verbosity bias và self-preference bằng cách nào?
 Chỉ làm sau khi hoàn thành 3.1–3.3. Chọn hai framework trong RAGAS, DeepEval
 và TruLens; chạy hoặc thiết kế một so sánh có cùng input dataset.
 
-| Tiêu chí | Framework 1: ____ | Framework 2: ____ |
+| Tiêu chí | Framework 1: RAGAS (0.4.3) | Framework 2: DeepEval (4.2.7) |
 |---|---|---|
-| Setup complexity | | |
-| Metrics available | | |
-| CI/CD integration | | |
-| Kết quả trên cùng dataset | | |
-| Insight rút ra | | |
+| Setup complexity | Cao hơn: import `ragas` lỗi vì xung đột với `langchain-community` 0.4.2, phải hạ xuống 0.3.31 mới chạy; API `ragas.metrics.collections` cần tự tạo `llm_factory` và client bất đồng bộ. | Thấp hơn: cài xong dùng được ngay với `LLMTestCase` và `FaithfulnessMetric(model="gpt-4o-mini")`. |
+| Metrics available | Faithfulness, Answer Relevancy, Context Recall, Context Precision, v.v. (Answer Relevancy cần thêm embeddings, tôi không chạy). | Faithfulness, Answer Relevancy, Contextual Recall/Precision, Hallucination, v.v. |
+| CI/CD integration | Dùng qua script hoặc `evaluate()` trên dataset; phải tự viết bước so sánh ngưỡng. | Có tích hợp pytest (`assert_test`) nên dễ đặt làm quality gate. |
+| Kết quả trên cùng dataset | Faithfulness trung bình 0.787; điểm thấp nhất A01 (0.000), A02 và H04 (0.333). | Faithfulness trung bình 0.914 và Answer Relevancy 0.766; Faithfulness thấp nhất là H01 và H02 (0.500), H04 (0.667). Lab core: Faithfulness 0.611, Relevance 0.520. |
+| Insight rút ra | Điểm Faithfulness tương quan với core cao nhất (r = 0.63), nhưng chấm A01 = 0.0, tức cũng phạt câu từ chối vì câu này không phải claim có trong context. | Nhìn chung dễ dãi hơn, và cho điểm thấp đúng vào H01 (case có lỗi ngày thật). Tương quan với core rất thấp (r = 0.13). |
 
 - Scores có nhất quán không?
 - Framework nào strict hơn và vì sao?
 - Hai framework có tìm ra cùng failure cases không?
 
-> *Phân tích:*
+> *Phân tích:* Phương pháp: cả hai framework chấm cùng 20 answers và cùng retrieved chunks trong `artifacts/actual_answers.json`, dùng gpt-4o-mini làm judge. Tôi so sánh Faithfulness cho cả ba (core, RAGAS, DeepEval) và Answer Relevancy giữa core và DeepEval; RAGAS Answer Relevancy không chạy.
+>
+> **Nhất quán?** Chưa hoàn toàn. Hệ số tương quan Faithfulness: core–RAGAS 0.63, DeepEval–RAGAS 0.47, core–DeepEval chỉ 0.13. Answer Relevancy core–DeepEval là 0.40. Ba cách chấm cho ra thứ hạng case khá khác nhau.
+>
+> **Framework nào strict hơn?** Trong ba cách đo, core strict nhất (Faithfulness 0.611) chỉ vì nó đếm từ trùng, nên diễn đạt lại bị phạt; DeepEval dễ dãi nhất (0.914) và RAGAS ở giữa (0.787). Chỉ 3 case dưới 0.7 theo DeepEval, 6 theo RAGAS, và 13 theo core. Hai framework dùng LLM kiểm tra từng claim, nên câu diễn đạt lại mà đúng ý (E02, M03, H04...) không bị phạt.
+>
+> **Có tìm ra cùng failure không?** Một phần. Cả hai framework LLM cùng cho điểm thấp ở H01, H02 và H04, trong khi core không xếp các case này vào nhóm thấp nhất. H01 là lỗi thật mà tôi đã xác nhận (sai ngày hết hạn), nên đây là điểm cộng của framework LLM so với overlap. Tôi chưa mở lại từng claim của H02 và H04 để xác nhận, nên giả thuyết là câu trả lời có claim suy ra từ câu hỏi hoặc phần suy luận không nằm nguyên văn trong context. Ngược lại, RAGAS phạt A01 (0.0) và A02 (0.333), tức nó cũng coi câu từ chối là claim không được context hỗ trợ, giống lỗi mà core mắc phải; DeepEval cho A01–A03 Faithfulness 1.0 nhưng Answer Relevancy thấp (0.5, 0.0, 0.0), nên cả hai đều cần rubric riêng cho hành vi từ chối.
+>
+> **Kết luận:** dùng LLM-based metric cho Faithfulness cải thiện việc phát hiện lỗi thật, nhưng cần nhiều hơn một framework hoặc judge có hiệu chỉnh bằng nhãn của người, vì kết quả lệch nhau khá nhiều.
 
 ### Exercise 3.5 — Retrieval Reranking (Bonus +5)
 
@@ -334,4 +342,4 @@ Hoàn thành kiểm tra cuối trong khoảng 16:50–17:00.
 - [x] Exercise 3.3 có rubric 1–5 và bias controls.
 - [x] `reflection.md` có ba failure analyses và regression strategy.
 - [x] Đã copy `template.py` thành `solution/solution.py`.
-- [ ] Exercise 3.4 và 3.5 chỉ làm nếu chọn bonus.
+- [x] Exercise 3.4 và 3.5 chỉ làm nếu chọn bonus.
